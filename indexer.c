@@ -7,44 +7,55 @@
 #define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
 #define ALPHABET_SIZE (26)
 
-typedef struct TF{
+typedef struct TF
+{
     char word[100];
     char arch[100];
-    int tword;
-    int fword;
+    float tword;
+    float fword;
     float tf;
     int pres;
-}tf;
+} tf;
 
-typedef struct Nodo{
-    struct TF dados;
-    struct Nodo * prox;
-}Nodo;
-
-
-void inicializa_lista(Nodo **N)//inicializa a lista
+typedef struct Nodo
 {
- *N = NULL;
+    struct TF dados;
+    struct Nodo *prox;
+} Nodo;
+
+void inicializa_lista(Nodo **N) //inicializa a lista
+{
+    *N = NULL;
 }
 
-Nodo * Cria_Nodo() //aloca memória para o nodo
+Nodo *Cria_Nodo() //aloca memória para o nodo
 {
- Nodo *p;
- p = (Nodo *) malloc(sizeof(Nodo));
- if(!p)
- {
- printf("Problema de alocação");
- exit(0);
- }
- return p;
+    Nodo *p;
+    p = (Nodo *)malloc(sizeof(Nodo));
+    if (!p)
+    {
+        printf("Problema de alocação");
+        exit(0);
+    }
+    return p;
 }
 
 void insere_fim_lista(Nodo **N, struct TF dado)
 {
     Nodo *novo, *aux;
     novo = Cria_Nodo();
+    float fw = 0;
+    float tw = 0;
+    float media;
 
 
+    fw = dado.fword;
+  
+    tw = dado.tword;
+
+    media = ((fw)/(tw));
+    novo->dados.tf = media;
+    printf("%.10f\n",novo->dados.tf);
     strcpy(novo->dados.arch, dado.arch);
     strcpy(novo->dados.word, dado.word);
     novo->dados.fword = dado.fword;
@@ -63,19 +74,17 @@ void insere_fim_lista(Nodo **N, struct TF dado)
 
 void imprime_lista_ecandeada(Nodo *N)
 {
- Nodo *aux;
- int tf,tw;
- float media;
+    Nodo *aux;
+    float media;
 
- if(N == NULL)
- printf("\n A lista está vazia!!");
- else
- {
- for(aux = N; aux != NULL; aux = aux->prox)
-    
+    if (N == NULL)
+        printf("\n A lista está vazia!!");
+    else
+    {
+        for (aux = N; aux != NULL; aux = aux->prox)
 
-  printf("------\nArquivo: %s\nPalavra: %s\nTotal Palavras: %d\nQuantidade: %d\n",aux->dados.arch,aux->dados.word,aux->dados.tword,aux->dados.fword);
- }
+            printf("------\nArquivo: %s\nPalavra: %s\nTotal Palavras: %.2f\nQuantidade: %.2f\nMedia: %.10f\n", aux->dados.arch, aux->dados.word, aux->dados.tword, aux->dados.fword,aux->dados.tf);
+    }
 }
 typedef struct Trie
 {
@@ -97,7 +106,6 @@ struct Trie *newNode()
     }
     return node;
 }
-
 
 int isWord(struct Trie *node)
 {
@@ -150,9 +158,7 @@ int search(struct Trie *root, const char *key)
         pCrawl = pCrawl->children[index];
     }
 
-    
     return (pCrawl->count);
-
 }
 
 int assembleTrie(char param[100], struct Trie *root)
@@ -205,11 +211,13 @@ int assembleTrie(char param[100], struct Trie *root)
     fclose(file);
 }
 
-void split(char term[100], char w[][100]){
-    char * token;
+void split(char term[100], char w[][100])
+{
+    char *token;
     int x = 0;
-    
-    token = strtok(term, " ");
+    char *delim = " .,/";
+
+    token = strtok(term, delim);
 
     while (token != NULL)
     {
@@ -219,6 +227,7 @@ void split(char term[100], char w[][100]){
         x++;
     }
 }
+
 int main(int argc, char *argv[])
 {
     struct Hash *vet;
@@ -226,8 +235,11 @@ int main(int argc, char *argv[])
     char word[100];
     int level = 0;
     struct Trie *root = newNode();
+    struct TF no;
+    //crialista
+    Nodo *Mylist;
+    inicializa_lista(&Mylist);
 
-    
     if (strcmp(argv[1], "--freq") == 0)
     {
         int j = 0;
@@ -257,54 +269,54 @@ int main(int argc, char *argv[])
         int x = 0;
         int a = 0;
         int j = 0;
-        char * token;
+        char *token;
+        char arch[argc - 3][100];
+        
+        printf("argc: %d\n",argc);
+        
+        for(i=0;i<argc;i++){
+        printf("argv: %s\n",argv[i]);
+        }
         strcpy(term, argv[2]);
-        char arch[argc-3][100];
-        //printf("%s\n", term);
+        
 
         for (i = 0; term[i] != '\0'; i++)
         {
-            if (term[i] == ' ')
+            if ((term[i] == ' ')|| term[i] == '\0')
             {
                 p++;
             }
         }
         char w[p][100];
-        split(term,w);
-   
-  
-   for(i=3;i<argc;i++){
+        split(term, w);
+        printf("%s\n", term);
+
+
+        for (i = 3; i < argc; i++)
+        {
             strcpy(arch[j], argv[i]);
             a++;
             j++;
         }
 
+     
     
-    struct TF no;
+        for (i = 0; i < a; i++)
+        {
+            root = newNode();
+            no.tword = assembleTrie(arch[i], root);
+            for (j = 0; j <= p; j++)
+            {
+                printf("----Palavra: %s----- \n", w[j]);
+                no.fword = search(root, w[j]);
+                strcpy(no.word, w[j]);
+                strcpy(no.arch, arch[i]);
+                insere_fim_lista(&Mylist, no);
+            }
+            free(root);
+        }
 
-    //crialista
-    Nodo * Mylist;
-    inicializa_lista(&Mylist);
-
-   for (i = 0; i <a; i++)
-   {
-        root = newNode();
-        no.tword = assembleTrie(arch[i],root);
-    
-       for (int j = 0; j <= p; j++)
-       {
-        
-           no.fword = search(root,w[j]);
-           strcpy(no.word,w[j]);
-           strcpy(no.arch,arch[i]);
-           //printf("------\nArquivo: %s\nPalavra: %s\nTotal Palavras: %d\nQuantidade: %d\n",no.arch,no.word,no.tword,no.fword);
-           insere_fim_lista(&Mylist,no);
-       }
-       free(root);
-   }
-    
-    imprime_lista_ecandeada(Mylist);
-    
+        imprime_lista_ecandeada(Mylist);
     }
     else
     {
