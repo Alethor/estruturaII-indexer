@@ -7,12 +7,76 @@
 #define ARRAY_SIZE(a) sizeof(a) / sizeof(a[0])
 #define ALPHABET_SIZE (26)
 
-typedef struct Hash
-{
-    char chave[200];
-    int valor;
-} hash;
+typedef struct TF{
+    char word[100];
+    char arch[100];
+    int tword;
+    int fword;
+    float tf;
+    int pres;
+}tf;
 
+typedef struct Nodo{
+    struct TF dados;
+    struct Nodo * prox;
+}Nodo;
+
+
+void inicializa_lista(Nodo **N)//inicializa a lista
+{
+ *N = NULL;
+}
+
+Nodo * Cria_Nodo() //aloca memória para o nodo
+{
+ Nodo *p;
+ p = (Nodo *) malloc(sizeof(Nodo));
+ if(!p)
+ {
+ printf("Problema de alocação");
+ exit(0);
+ }
+ return p;
+}
+
+void insere_fim_lista(Nodo **N, struct TF dado)
+{
+    Nodo *novo, *aux;
+    novo = Cria_Nodo();
+
+
+    strcpy(novo->dados.arch, dado.arch);
+    strcpy(novo->dados.word, dado.word);
+    novo->dados.fword = dado.fword;
+    novo->dados.tword = dado.tword;
+    novo->prox = NULL;
+    if (*N == NULL)
+        *N = novo;
+    else
+    {
+        aux = *N;
+        while (aux->prox != NULL)
+            aux = aux->prox;
+        aux->prox = novo;
+    }
+}
+
+void imprime_lista_ecandeada(Nodo *N)
+{
+ Nodo *aux;
+ int tf,tw;
+ float media;
+
+ if(N == NULL)
+ printf("\n A lista está vazia!!");
+ else
+ {
+ for(aux = N; aux != NULL; aux = aux->prox)
+    
+
+  printf("------\nArquivo: %s\nPalavra: %s\nTotal Palavras: %d\nQuantidade: %d\n",aux->dados.arch,aux->dados.word,aux->dados.tword,aux->dados.fword);
+ }
+}
 typedef struct Trie
 {
     int isWord;
@@ -33,6 +97,7 @@ struct Trie *newNode()
     }
     return node;
 }
+
 
 int isWord(struct Trie *node)
 {
@@ -85,49 +150,13 @@ int search(struct Trie *root, const char *key)
         pCrawl = pCrawl->children[index];
     }
 
+    
     return (pCrawl->count);
+
 }
 
-void display(struct Trie *root, char str[], int level, int n)
+int assembleTrie(char param[100], struct Trie *root)
 {
-    struct Hash vet[n];
-    int i = 0;
-
-    if (isWord(root) == 1)
-    {
-        str[level] = '\0';
-
-        if (level < n)
-        {
-            strcpy(vet[level].chave, str);
-            vet[level].valor = root->count;
-        }
-        else if (vet[n - 1].valor < root->count)
-        {
-            strcpy(vet[n - 1].chave, str);
-            vet[n - 1].valor = root->count;
-        }
-    }
-    printf("%s -> %d\n", vet[level].chave, vet[level].valor);
-
-for (i = 0; i < ALPHABET_SIZE; i++)
-{
-    // if NON NULL child is found
-    // add parent key to str and
-    // call the display function recursively
-    // for child node
-    if (root->children[i])
-    {
-        str[level] = i + 'a';
-        display(root->children[i], str, level + 1,n);
-    }
-}
-}
-
-int assembleTrie(char param[50], struct Trie *root)
-{
-
-    printf("cheguei");
 
     FILE *file;
     char word[100];
@@ -173,27 +202,44 @@ int assembleTrie(char param[50], struct Trie *root)
         }
     }
     return tword;
+    fclose(file);
 }
 
+void split(char term[100], char w[][100]){
+    char * token;
+    int x = 0;
+    
+    token = strtok(term, " ");
+
+    while (token != NULL)
+    {
+        strcpy(w[x], token);
+        token = strtok(NULL, " ");
+        printf("%s\n", w[x]);
+        x++;
+    }
+}
 int main(int argc, char *argv[])
 {
+    struct Hash *vet;
     int tword = 0;
     char word[100];
     int level = 0;
+    struct Trie *root = newNode();
 
-    for (int i = 0; i < argc; i++)
-    {
-        printf(" %s ", argv[i]);
-    }
+    
     if (strcmp(argv[1], "--freq") == 0)
     {
-        printf("sugma terminal");
+        int j = 0;
+        //struct Hash vet[20];
+
         printf(" %s ", argv[3]);
+        tword = assembleTrie(argv[3], root);
+        //display(root, word, level, vet, j);
     }
     else if (strcmp(argv[1], "--freq-word") == 0)
     {
 
-        struct Trie *root = newNode();
         char param[50];
         int x = 0;
         char n = 3;
@@ -202,7 +248,63 @@ int main(int argc, char *argv[])
         tword = assembleTrie(argv[3], root);
         x = search(root, argv[2]);
         printf("\n -- A palavra '%s' aparece %d vezes-- \n", argv[2], x);
+    }
+    else if (strcmp(argv[1], "--search") == 0)
+    {
+        char term[100];
+        int i = 0;
+        int p = 0;
+        int x = 0;
+        int a = 0;
+        int j = 0;
+        char * token;
+        strcpy(term, argv[2]);
+        char arch[argc-3][100];
+        //printf("%s\n", term);
 
+        for (i = 0; term[i] != '\0'; i++)
+        {
+            if (term[i] == ' ')
+            {
+                p++;
+            }
+        }
+        char w[p][100];
+        split(term,w);
+   
+  
+   for(i=3;i<argc;i++){
+            strcpy(arch[j], argv[i]);
+            a++;
+            j++;
+        }
+
+    
+    struct TF no;
+
+    //crialista
+    Nodo * Mylist;
+    inicializa_lista(&Mylist);
+
+   for (i = 0; i <a; i++)
+   {
+        root = newNode();
+        no.tword = assembleTrie(arch[i],root);
+    
+       for (int j = 0; j <= p; j++)
+       {
+        
+           no.fword = search(root,w[j]);
+           strcpy(no.word,w[j]);
+           strcpy(no.arch,arch[i]);
+           //printf("------\nArquivo: %s\nPalavra: %s\nTotal Palavras: %d\nQuantidade: %d\n",no.arch,no.word,no.tword,no.fword);
+           insere_fim_lista(&Mylist,no);
+       }
+       free(root);
+   }
+    
+    imprime_lista_ecandeada(Mylist);
+    
     }
     else
     {
